@@ -18,7 +18,7 @@ You can't anymore and I wanted to see what I could do or what has been done.
 - https://dev.mysql.com/doc/refman/8.0/en/system-variables.html#sysvar_print_identified_with_as_hex
 
 
-Author of the bug: [Simon Mudd](https://github.com/sjmudd)  https://bugs.mysql.com/bug.php?id=98732
+Author of the `Bug`: [Simon Mudd](https://github.com/sjmudd)  https://bugs.mysql.com/bug.php?id=98732
 
 ```Go
 klarsen@Mac-Book-Pro2 go-pass % go run main.go -s 10.8.0.10 -f createUsers.sql
