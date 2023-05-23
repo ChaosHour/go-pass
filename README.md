@@ -26,6 +26,17 @@ I just wanted to learn more about it and how to use it, plus I wanted to see how
 
 Author of the `Bug`: [Simon Mudd](https://github.com/sjmudd)  https://bugs.mysql.com/bug.php?id=98732
 
+
+## Usage
+```Go
+Usage: ./go-pass -s < source host> -f <dump file>"
+  -f string
+        Dump file
+  -s string
+        Source host
+```
+
+
 ```Go
 klarsen@Mac-Book-Pro2 go-pass % go run main.go -s 10.8.0.10 -f createUsers.sql
 2023/05/22 19:12:12 [+] Connecting to database: root:root@tcp(10.8.0.10:3306)/mysql

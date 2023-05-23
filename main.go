@@ -199,7 +199,7 @@ func runQuery() {
 
 // print the help message
 func printHelp() {
-	fmt.Println("Usage: ./go-pass -s < source host> || -f <dump file>")
+	fmt.Println("Usage: ./go-pass -s < source host> -f <dump file>")
 }
 
 // main is the entry point of the application
