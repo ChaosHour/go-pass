@@ -1,5 +1,6 @@
 # go-pass
-Testing MySQL 8 caching_sha2_password and the system variable print_identified_with_as_hex
+- caching_sha2_password
+- variable print_identified_with_as_hex 
 
 
 ## The why?
