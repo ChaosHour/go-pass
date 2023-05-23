@@ -7,6 +7,11 @@
 In older versions of MySQL, you used to be able to use the password() funtion and use that hash for scripts, Ansible and what not.
 You can't anymore and I wanted to see what I could do or what has been done.
 
+Why not just use `pt-show-grants` 
+- https://www.percona.com/doc/percona-toolkit/LATEST/pt-show-grants.html
+
+I just wanted to learn more about it and how to use it, plus I wanted to see how to do it with `Golang`.
+
 
 ## Testing Environment
 - Docker run `docker run -d --name ps -d -p 3306:3306/tcp  -e MYSQL_ROOT_PASSWORD=root percona/percona-server:8.0.32-24`
