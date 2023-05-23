@@ -147,7 +147,7 @@ func dumpUserAccounts() {
 	//fmt.Println(yellow("[+]"), "Wrote to file:", fileName)
 }
 
-// Create a function to read and apply the sql query from the file to the target database
+// Create a function to read and apply the sql query from the file back to the source database
 func runQuery() {
 	// Read SQL file
 	file, err := ioutil.ReadFile(*file)
