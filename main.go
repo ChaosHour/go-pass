@@ -36,6 +36,7 @@ func init() {
 // global variables
 var (
 	db  *sql.DB
+	db2 *sql.DB
 	err error
 )
 
@@ -72,11 +73,10 @@ func connectToDatabase() {
 	//defer db1.Close()
 }
 
-// dump the user accounts from the source database and write the results to a file that the user has defined from the -f flag
-// verify that the file exists and that the user has write permissions to the file
-// the file should be created in the current directory
+// Create a function to dump the user accounts to a file
 func dumpUserAccounts() {
-	//rows, err := db.Query("SELECT CONCAT('CREATE USER ',QUOTE(user),'@',QUOTE(host),';') as user FROM mysql.user WHERE user NOT IN ('mysql.infoschema', 'mysql.session', 'mysql.sys')")
+	// Get the user accounts from the source database
+	// rows, err := db.Query("SELECT CONCAT('SHOW CREATE USER ', quote(user), '@', quote(host), ';') as user FROM mysql.user WHERE user NOT IN ('mysql.infoschema', 'mysql.session', 'mysql.sys')")
 	rows, err := db.Query("SELECT CONCAT('SHOW CREATE USER ', quote(user), '@', quote(host), ';') as user FROM mysql.user WHERE user NOT IN ('mysql.infoschema', 'mysql.session', 'mysql.sys')")
 	if err != nil {
 		log.Fatal(red("[+]"), err)
@@ -97,8 +97,6 @@ func dumpUserAccounts() {
 	}
 
 	fileName := *file
-	//fmt.Println(yellow("[+]"), "Dumping user accounts to file:", fileName)
-
 	// Check if file exists and has write permissions
 	fileInfo, err := os.Stat(fileName)
 	if os.IsNotExist(err) {
@@ -187,9 +185,9 @@ func runQuery() {
 			}
 			for i, col := range values {
 				if col == nil {
-					fmt.Printf("%s: NULL\t", columns[i])
+					fmt.Printf("-- %s: \n NULL;", columns[i]) // append semicolon to printed string
 				} else {
-					fmt.Printf("%s: %s\t", columns[i], col)
+					fmt.Printf("-- %s: \n %s;", columns[i], col) // append semicolon to printed string
 				}
 			}
 			fmt.Println()
