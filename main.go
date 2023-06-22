@@ -206,7 +206,7 @@ func printHelp() {
 
 // handleError is a helper function to handle errors
 func handleError(err error) {
-	log.Fatal(red("[+]"), err)
+	log.Fatal(red("[!]"), err)
 }
 
 // main is the entry point of the application
