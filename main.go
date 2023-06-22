@@ -1,4 +1,3 @@
-// Dump MySQL 8 user accounts to a file.
 package main
 
 import (
@@ -17,9 +16,10 @@ import (
 
 // Define flags
 var (
-	source = flag.String("s", "", "Source Host")
-	file   = flag.String("f", "", "dump file")
-	help   = flag.Bool("h", false, "Print help")
+	source  = flag.String("s", "", "Source Host")
+	file    = flag.String("f", "", "dump file")
+	outfile = flag.String("o", "", "output file")
+	help    = flag.Bool("h", false, "Print help")
 )
 
 // define colors
@@ -36,7 +36,6 @@ func init() {
 // global variables
 var (
 	db  *sql.DB
-	db2 *sql.DB
 	err error
 )
 
@@ -44,7 +43,7 @@ var (
 func readMyCnf() {
 	file, err := ioutil.ReadFile(os.Getenv("HOME") + "/.my.cnf")
 	if err != nil {
-		log.Fatal(err)
+		handleError(err)
 	}
 	lines := strings.Split(string(file), "\n")
 	for _, line := range lines {
@@ -63,23 +62,21 @@ func connectToDatabase() {
 	db, err = sql.Open("mysql", os.Getenv("MYSQL_USER")+":"+os.Getenv("MYSQL_PASSWORD")+"@tcp("+*source+":3306)/")
 
 	if err != nil {
-		log.Fatal(err)
+		handleError(err)
 	}
 	err = db.Ping()
 	if err != nil {
-		log.Fatal(err)
+		handleError(err)
 	}
 	log.Println(green("[+]"), "Connecting to database:", os.Getenv("MYSQL_USER")+":"+os.Getenv("MYSQL_PASSWORD")+"@tcp("+*source+":3306)/mysql")
-	//defer db1.Close()
 }
 
 // Create a function to dump the user accounts to a file
 func dumpUserAccounts() {
 	// Get the user accounts from the source database
-	// rows, err := db.Query("SELECT CONCAT('SHOW CREATE USER ', quote(user), '@', quote(host), ';') as user FROM mysql.user WHERE user NOT IN ('mysql.infoschema', 'mysql.session', 'mysql.sys')")
 	rows, err := db.Query("SELECT CONCAT('SHOW CREATE USER ', quote(user), '@', quote(host), ';') as user FROM mysql.user WHERE user NOT IN ('mysql.infoschema', 'mysql.session', 'mysql.sys')")
 	if err != nil {
-		log.Fatal(red("[+]"), err)
+		handleError(err)
 	}
 	defer rows.Close()
 
@@ -88,12 +85,12 @@ func dumpUserAccounts() {
 		var user string
 		err := rows.Scan(&user)
 		if err != nil {
-			log.Fatal(red("[+]"), err)
+			handleError(err)
 		}
 		users = append(users, user)
 	}
 	if err := rows.Err(); err != nil {
-		log.Fatal(err)
+		handleError(err)
 	}
 
 	fileName := *file
@@ -103,43 +100,49 @@ func dumpUserAccounts() {
 		// File doesn't exist, try to create it
 		file, err := os.Create(fileName)
 		if err != nil {
-			log.Fatal(red("[+]"), "Error creating file:", err)
+			handleError(err)
 		}
 		defer file.Close()
 		fileInfo, err = file.Stat()
 		if err != nil {
-			log.Fatal(red("[+]"), "Error getting file info:", err)
+			handleError(err)
 		}
 	} else if err != nil {
-		log.Fatal("Error checking file permissions:", err)
+		handleError(err)
 	}
 
 	// File exists and has write permissions, do something with it
 	if !fileInfo.Mode().IsRegular() {
-		log.Fatal(red("[+]"), "Error: Not a regular file")
+		handleError(fmt.Errorf("Error: Not a regular file"))
 	} else if fileInfo.Mode().Perm()&os.FileMode(0200) == 0 {
-		log.Fatal(red("[+]"), "Error: File is not writable")
+		handleError(fmt.Errorf("Error: File is not writable"))
 	}
 
 	// Create the file and write the user accounts to it
 	file, err := os.Create(fileName)
 	if err != nil {
-		log.Fatal(red("[+]"), err)
+		handleError(err)
 	}
 	defer file.Close()
 
 	// add this to the top of the file -> SET print_identified_with_as_hex = 1;
 	file.Seek(0, 0)
 	file.WriteString("SET print_identified_with_as_hex = 1;\n")
+	defer func() {
+		_, err := db.Exec("SET print_identified_with_as_hex = 0;")
+		if err != nil {
+			handleError(err)
+		}
+	}()
 
 	for _, user := range users {
 		if _, err = file.WriteString(user + "\n"); err != nil {
-			log.Fatal(red("[+]"), err)
+			handleError(err)
 		}
 	}
 
 	if err = file.Sync(); err != nil {
-		log.Fatal(red("[+]"), err)
+		handleError(err)
 	}
 
 	//fmt.Println(yellow("[+]"), "Wrote to file:", fileName)
@@ -150,7 +153,7 @@ func runQuery() {
 	// Read SQL file
 	file, err := ioutil.ReadFile(*file)
 	if err != nil {
-		log.Fatal(err)
+		handleError(err)
 	}
 
 	// Split SQL file into statements
@@ -163,14 +166,14 @@ func runQuery() {
 		}
 		rows, err := db.Query(statement)
 		if err != nil {
-			log.Fatal(err)
+			handleError(err)
 		}
 		defer rows.Close()
 
 		// Print out each row of results
 		columns, err := rows.Columns()
 		if err != nil {
-			log.Fatal(err)
+			handleError(err)
 		}
 
 		values := make([]interface{}, len(columns))
@@ -181,13 +184,14 @@ func runQuery() {
 
 		for rows.Next() {
 			if err := rows.Scan(valuePtrs...); err != nil {
-				log.Fatal(err)
+				handleError(err)
 			}
+
 			for i, col := range values {
 				if col == nil {
-					fmt.Printf("-- %s: \n NULL;", columns[i]) // append semicolon to printed string
+					fmt.Printf("-- %s: \n NULL;", strings.ReplaceAll(columns[i], "CREATE USER", "CREATE USER IF NOT EXISTS")) // append semicolon to printed string
 				} else {
-					fmt.Printf("-- %s: \n %s;", columns[i], col) // append semicolon to printed string
+					fmt.Printf("-- %s: \n %s;", strings.ReplaceAll(columns[i], "CREATE USER", "CREATE USER IF NOT EXISTS"), col) // append semicolon to printed string
 				}
 			}
 			fmt.Println()
@@ -198,6 +202,11 @@ func runQuery() {
 // print the help message
 func printHelp() {
 	fmt.Println("Usage: ./go-pass -s < source host> -f <dump file>")
+}
+
+// handleError is a helper function to handle errors
+func handleError(err error) {
+	log.Fatal(red("[+]"), err)
 }
 
 // main is the entry point of the application
