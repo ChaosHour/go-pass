@@ -18,8 +18,8 @@ import (
 var (
 	source = flag.String("s", "", "Source Host")
 	file   = flag.String("f", "", "dump file")
-	//outfile = flag.String("o", "", "output file")
-	help = flag.Bool("h", false, "Print help")
+	only   = flag.String("o", "", "Only dump the specified user")
+	help   = flag.Bool("h", false, "Print help")
 )
 
 // define colors
@@ -74,7 +74,13 @@ func connectToDatabase() {
 // Create a function to dump the user accounts to a file
 func dumpUserAccounts() {
 	// Get the user accounts from the source database
-	rows, err := db.Query("SELECT CONCAT('SHOW CREATE USER ', quote(user), '@', quote(host), '; SHOW GRANTS FOR ', quote(user), '@', quote(host), ';') as user FROM mysql.user WHERE user NOT IN ('mysql.infoschema', 'mysql.session', 'mysql.sys')")
+	var rows *sql.Rows
+	var err error
+	if *only != "" {
+		rows, err = db.Query("SELECT CONCAT('SHOW CREATE USER ', quote(user), '@', quote(host), '; SHOW GRANTS FOR ', quote(user), '@', quote(host), ';') as user FROM mysql.user WHERE user = ?", *only)
+	} else {
+		rows, err = db.Query("SELECT CONCAT('SHOW CREATE USER ', quote(user), '@', quote(host), '; SHOW GRANTS FOR ', quote(user), '@', quote(host), ';') as user FROM mysql.user WHERE user NOT IN ('mysql.infoschema', 'mysql.session', 'mysql.sys')")
+	}
 	if err != nil {
 		handleError(err)
 	}
@@ -203,6 +209,9 @@ func runQuery() {
 // print the help message
 func printHelp() {
 	fmt.Println("Usage: ./go-pass -s < source host> -f <dump file>")
+	fmt.Println("Options:")
+	fmt.Println("Usage: ./go-pass -s < source host> -f <dump file>" + yellow(" -o <user>"))
+
 }
 
 // handleError is a helper function to handle errors
