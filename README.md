@@ -29,11 +29,10 @@ Author of the `Bug`: [Simon Mudd](https://github.com/sjmudd)  https://bugs.mysql
 
 ## Usage
 ```Go
-Usage: ./go-pass -s < source host> -f <dump file>"
-  -f string
-        Dump file
-  -s string
-        Source host
+Usage:  go-pass -h                                                                                                                                                      
+Usage: ./go-pass -s < source host> -f <dump file>
+Options:
+Usage: ./go-pass -s < source host> -f <dump file> -o <user>
 ```
 
 ## Example - 1:
@@ -101,3 +100,16 @@ migrate.sql
  GRANT APPLICATION_PASSWORD_ADMIN,AUDIT_ABORT_EXEMPT,AUDIT_ADMIN,AUTHENTICATION_POLICY_ADMIN,BACKUP_ADMIN,BINLOG_ADMIN,BINLOG_ENCRYPTION_ADMIN,CLONE_ADMIN,CONNECTION_ADMIN,ENCRYPTION_KEY_ADMIN,FIREWALL_EXEMPT,FLUSH_OPTIMIZER_COSTS,FLUSH_STATUS,FLUSH_TABLES,FLUSH_USER_RESOURCES,GROUP_REPLICATION_ADMIN,GROUP_REPLICATION_STREAM,INNODB_REDO_LOG_ARCHIVE,INNODB_REDO_LOG_ENABLE,PASSWORDLESS_USER_ADMIN,PERSIST_RO_VARIABLES_ADMIN,REPLICATION_APPLIER,REPLICATION_SLAVE_ADMIN,RESOURCE_GROUP_ADMIN,RESOURCE_GROUP_USER,ROLE_ADMIN,SENSITIVE_VARIABLES_OBSERVER,SERVICE_CONNECTION_ADMIN,SESSION_VARIABLES_ADMIN,SET_USER_ID,SHOW_ROUTINE,SYSTEM_USER,SYSTEM_VARIABLES_ADMIN,TABLE_ENCRYPTION_ADMIN,XA_RECOVER_ADMIN ON *.* TO `root`@`localhost` WITH GRANT OPTION;
  GRANT PROXY ON ``@`` TO `root`@`localhost` WITH GRANT OPTION;
 ```
+
+
+## Only dump a single user account and its grants
+
+```Go
+go-pass -s 10.8.0.15 -f show_users.sql -o klarsen | sed -e 's/CREATE USER/CREATE USER IF NOT EXISTS/g' -e '/^-- Grants/d' | grep -v 'Dumping' > only-klarsen.sql
+2023/06/22 21:39:31 [+] Connecting to database: root:root@tcp(10.8.0.15:3306)/mysql
+
+only-klarsen.sql
+- CREATE USER IF NOT EXISTS for klarsen@%: 
+ CREATE USER IF NOT EXISTS `klarsen`@`%` IDENTIFIED WITH 'caching_sha2_password' AS 0x2441243030352446274D6E7F57015B673B1E4E5C272728022C585F6B6F2E2E6135484A706D5841467345543749447250477A6F764B5269734C6A59494333474663334B307044 REQUIRE NONE PASSWORD EXPIRE DEFAULT ACCOUNT UNLOCK PASSWORD HISTORY DEFAULT PASSWORD REUSE INTERVAL DEFAULT PASSWORD REQUIRE CURRENT DEFAULT;
+ GRANT USAGE ON *.* TO `klarsen`@`%`;
+ ```
