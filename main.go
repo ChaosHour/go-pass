@@ -16,10 +16,10 @@ import (
 
 // Define flags
 var (
-	source  = flag.String("s", "", "Source Host")
-	file    = flag.String("f", "", "dump file")
-	outfile = flag.String("o", "", "output file")
-	help    = flag.Bool("h", false, "Print help")
+	source = flag.String("s", "", "Source Host")
+	file   = flag.String("f", "", "dump file")
+	//outfile = flag.String("o", "", "output file")
+	help = flag.Bool("h", false, "Print help")
 )
 
 // define colors
@@ -74,7 +74,7 @@ func connectToDatabase() {
 // Create a function to dump the user accounts to a file
 func dumpUserAccounts() {
 	// Get the user accounts from the source database
-	rows, err := db.Query("SELECT CONCAT('SHOW CREATE USER ', quote(user), '@', quote(host), ';') as user FROM mysql.user WHERE user NOT IN ('mysql.infoschema', 'mysql.session', 'mysql.sys')")
+	rows, err := db.Query("SELECT CONCAT('SHOW CREATE USER ', quote(user), '@', quote(host), '; SHOW GRANTS FOR ', quote(user), '@', quote(host), ';') as user FROM mysql.user WHERE user NOT IN ('mysql.infoschema', 'mysql.session', 'mysql.sys')")
 	if err != nil {
 		handleError(err)
 	}
@@ -189,12 +189,13 @@ func runQuery() {
 
 			for i, col := range values {
 				if col == nil {
-					fmt.Printf("-- %s: \n NULL;", strings.ReplaceAll(columns[i], "CREATE USER", "CREATE USER IF NOT EXISTS")) // append semicolon to printed string
+					fmt.Printf("-- %s: \n NULL;", columns[i]) // append semicolon to printed string
 				} else {
-					fmt.Printf("-- %s: \n %s;", strings.ReplaceAll(columns[i], "CREATE USER", "CREATE USER IF NOT EXISTS"), col) // append semicolon to printed string
+					fmt.Printf("-- %s: \n %s;", columns[i], col) // append semicolon to printed string
 				}
 			}
 			fmt.Println()
+
 		}
 	}
 }
