@@ -113,3 +113,70 @@ only-klarsen.sql
  CREATE USER IF NOT EXISTS `klarsen`@`%` IDENTIFIED WITH 'caching_sha2_password' AS 0x2441243030352446274D6E7F57015B673B1E4E5C272728022C585F6B6F2E2E6135484A706D5841467345543749447250477A6F764B5269734C6A59494333474663334B307044 REQUIRE NONE PASSWORD EXPIRE DEFAULT ACCOUNT UNLOCK PASSWORD HISTORY DEFAULT PASSWORD REUSE INTERVAL DEFAULT PASSWORD REQUIRE CURRENT DEFAULT;
  GRANT USAGE ON *.* TO `klarsen`@`%`;
  ```
+
+
+## So, what can you do with this only-klarsen.sql file?
+
+```Go
+go-pass on  new-features via 🐹 v1.20.5 
+❯ mysql -e "select user from mysql.user where user = 'klarsen'"
++---------+
+| user    |
++---------+
+| klarsen |
++---------+
+
+go-pass on  main via 🐹 v1.20.5 
+❯ mysql -e "DROP USER klarsen"
+
+go-pass on  main via 🐹 v1.20.5 
+❯ mysql -e "select user from mysql.user where user = 'klarsen'"
+
+go-pass on  main via 🐹 v1.20.5 
+❯ cat only-klarsen.sql | mysql -vv
+--------------
+CREATE USER IF NOT EXISTS `klarsen`@`%` IDENTIFIED WITH 'caching_sha2_password' AS 0x2441243030352446274D6E7F57015B673B1E4E5C272728022C585F6B6F2E2E6135484A706D5841467345543749447250477A6F764B5269734C6A59494333474663334B307044 REQUIRE NONE PASSWORD EXPIRE DEFAULT ACCOUNT UNLOCK PASSWORD HISTORY DEFAULT PASSWORD REUSE INTERVAL DEFAULT PASSWORD REQUIRE CURRENT DEFAULT
+--------------
+
+Query OK, 0 rows affected
+
+--------------
+GRANT USAGE ON *.* TO `klarsen`@`%`
+--------------
+
+Query OK, 0 rows affected
+
+Bye
+
+go-pass on  main via 🐹 v1.20.5 
+❯ mysql -u klarsen -pwH4FLM97jCkbhPcFy6Ip8YL
+
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 221
+Server version: 8.0.32-24 Percona Server (GPL), Release 24, Revision e5c6e9d2
+
+Copyright (c) 2000, 2023, Oracle and/or its affiliates.
+
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates. Other names may be trademarks of their respective
+owners.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+mysql> select user();
++--------------------+
+| user()             |
++--------------------+
+| klarsen@172.17.0.1 |
++--------------------+
+1 row in set (0.00 sec)
+
+
+mysql> show grants;
++-------------------------------------+
+| Grants for klarsen@%                |
++-------------------------------------+
+| GRANT USAGE ON *.* TO `klarsen`@`%` |
++-------------------------------------+
+1 row in set (0.01 sec)
+```
