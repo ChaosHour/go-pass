@@ -26,7 +26,8 @@ var (
 var green = color.New(color.FgGreen).SprintFunc()
 var red = color.New(color.FgRed).SprintFunc()
 var yellow = color.New(color.FgYellow).SprintFunc()
-var blue = color.New(color.FgBlue).SprintFunc()
+
+//var blue = color.New(color.FgBlue).SprintFunc()
 
 // parse flags
 func init() {
@@ -119,9 +120,9 @@ func dumpUserAccounts() {
 
 	// File exists and has write permissions, do something with it
 	if !fileInfo.Mode().IsRegular() {
-		handleError(fmt.Errorf("Error: Not a regular file"))
+		handleError(fmt.Errorf("error: Not a regular file"))
 	} else if fileInfo.Mode().Perm()&os.FileMode(0200) == 0 {
-		handleError(fmt.Errorf("Error: File is not writable"))
+		handleError(fmt.Errorf("error: File is not writable"))
 	}
 
 	// Create the file and write the user accounts to it
